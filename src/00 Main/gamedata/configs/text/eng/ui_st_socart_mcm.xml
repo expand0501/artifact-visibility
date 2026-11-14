@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!-- Artifact Visibility 1.1.0 by Expand -->
+<string_table>
+	<string id="ui_mcm_menu_socart">
+		<text>Artifact Visibility</text>
+	</string>
+	<string id="ui_mcm_socart_title">
+		<text>Artifact Visibility</text>
+	</string>
+	<string id="ui_mcm_socart_credits">
+		<text>Artifact Visibility by Expand. Idea: SoC-style Artefacts (DLTX) by MaxSpringer.</text>
+	</string>
+	<string id="ui_mcm_socart_install_note">
+		<text>Glow light, particles and "detectors find all artefacts" are chosen in the mod installer (reinstall the mod in Mod Organizer 2 to change them).</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_main">
+		<text>Main</text>
+	</string>
+	<string id="ui_mcm_socart_enabled">
+		<text>Enable mod</text>
+	</string>
+	<string id="ui_mcm_socart_enabled_desc">
+		<text>Keeps artefacts lying in the world visible without a detector. Off = the game hides them again a few seconds later, until a detector finds them (installer options for light, particles and detectors stay active). Applies immediately. Costs a tiny check per artefact every 2 seconds.</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_debug">
+		<text>Debug</text>
+	</string>
+	<string id="ui_mcm_socart_debug">
+		<text>Debug log</text>
+	</string>
+	<string id="ui_mcm_socart_debug_desc">
+		<text>On every save load, writes one line to the game log (xray_*.log, tag [SoCArts]) showing which installer options are active. Only for bug reports.</text>
+	</string>
+</string_table>

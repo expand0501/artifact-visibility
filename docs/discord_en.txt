@@ -1,25 +1,28 @@
 ## Description
-Artefacts lying in the world are always visible, like in Shadow of Chernobyl: no detector needed to spot them. A remake of *SoC-style Artefacts (DLTX)* by MaxSpringer as one mod.
+Artefacts lying in the world are always visible, like in Shadow of Chernobyl: no detector needed to spot them. A remake of *SoC-style Artefacts (DLTX)* by MaxSpringer as one mod with installer options.
 
 ## Features
-- **Artefacts always visible** without a detector
-- Covers every artefact: GAMMA's own, junk, storyline and other mods'. No DLTX load order can undo it
-- **Artefact glow light** and **Artefact particles** are separate MCM configurable switches. Turn particles off too if artefacts still look like they glow
-- **Detectors keep their tiers** (MCM configurable, on by default): artefacts stay visible, but a detector only beeps for its own tier, like in normal GAMMA. Off = every detector finds every artefact
-- **Enable mod** master switch and **Debug log**, all MCM configurable
-- MCM changes apply after loading a save. Nothing runs per frame (tier mode: one tiny check per ground artefact every 2 s)
+- **Artefacts always visible** without a detector, from GAMMA, junk, storyline and other mods
+- Installer options (Mod Organizer 2), pick what you like:
+  - **Keep detector tiers** (recommended): artefacts stay visible, but a detector only beeps for its own tier, like in normal GAMMA
+  - **Detectors find all artefacts**: every detector finds every artefact, like the original mod
+  - **No glow light**: no coloured light around artefacts, saves GPU near anomaly fields
+  - **No idle particles**: no halo, sparks or smoke. Turn this on too if artefacts still look like they glow
+- **Enable mod** master switch, MCM configurable, applies immediately. **Debug log** is MCM configurable too
+- Lightweight: never touches the game config while you play. One tiny check per ground artefact every 2 s
 
 ## Install / remove
 - Safe to install or remove mid-playthrough: the mod adds no items and stores nothing in saves. Just load a save
+- To change installer options, reinstall the mod in MO2
 - Disable the old SoC-style Artefacts (DLTX) mod and all its variants
 - Needs DLTX (included in GAMMA), MCM optional. Works on monolith and Quark
 
 ## Bug reports
 Post **here** with:
 - `xray_*.log` (`Anomaly\appdata\logs\`), made with **Debug log** on
-- mod and GAMMA version, engine (monolith / Quark)
-- what happened vs. expected, steps, MCM settings
+- mod and GAMMA version, engine (monolith / Quark), installer options you picked
+- what happened vs. expected, steps to reproduce
 - screenshot if visual
 
 ## Links
-https://github.com/expand0501/soc-style-artefacts-remake/releases
+https://github.com/expand0501/artifact-visibility/releases

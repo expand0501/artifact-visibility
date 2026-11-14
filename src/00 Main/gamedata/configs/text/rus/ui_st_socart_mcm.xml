@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!-- Artifact Visibility 1.1.0 by Expand -->
+<string_table>
+	<string id="ui_mcm_menu_socart">
+		<text>Видимость артефактов</text>
+	</string>
+	<string id="ui_mcm_socart_title">
+		<text>Видимость артефактов (Artifact Visibility)</text>
+	</string>
+	<string id="ui_mcm_socart_credits">
+		<text>Artifact Visibility от Expand. Идея: SoC-style Artefacts (DLTX) от MaxSpringer.</text>
+	</string>
+	<string id="ui_mcm_socart_install_note">
+		<text>Свечение, частицы и "детекторы находят все артефакты" выбираются в установщике мода (чтобы изменить, переустановите мод в Mod Organizer 2).</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_main">
+		<text>Основное</text>
+	</string>
+	<string id="ui_mcm_socart_enabled">
+		<text>Включить мод</text>
+	</string>
+	<string id="ui_mcm_socart_enabled_desc">
+		<text>Артефакты в мире остаются видны без детектора. Выкл. = через несколько секунд игра снова скрывает их, пока их не найдёт детектор (опции установщика для свечения, частиц и детекторов продолжают действовать). Применяется сразу. Стоит крошечной проверки на артефакт раз в 2 секунды.</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_debug">
+		<text>Отладка</text>
+	</string>
+	<string id="ui_mcm_socart_debug">
+		<text>Журнал отладки</text>
+	</string>
+	<string id="ui_mcm_socart_debug_desc">
+		<text>При каждой загрузке сохранения пишет в лог игры (xray_*.log, метка [SoCArts]) одну строку о том, какие опции установщика включены. Нужно только для отчётов об ошибках.</text>
+	</string>
+</string_table>

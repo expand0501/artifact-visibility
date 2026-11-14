@@ -1,20 +1,15 @@
 -- MCM menu for Artifact Visibility by Expand
 -- Defaults must match DEFAULTS in socart_main.script (used when MCM is not installed).
--- All options apply on the next save load (socart_main.script edits the config only while the game loads).
+-- Both options apply live. Glow light, particles and detector tiers are installer options (DLTX files).
 function on_mcm_load()
 	return {
 		id = "socart", sh = true, gr = {
 			{ id = "title", type = "slide", link = "ui_options_slider_player", text = "ui_mcm_socart_title", size = {512, 50}, spacing = 20 },
 			{ id = "credits", type = "desc", text = "ui_mcm_socart_credits" },
-			{ id = "apply_note", type = "desc", text = "ui_mcm_socart_apply_note", clr = {255, 230, 200, 120} },
+			{ id = "install_note", type = "desc", text = "ui_mcm_socart_install_note", clr = {255, 230, 200, 120} },
 
 			{ id = "hdr_main", type = "title", text = "ui_mcm_socart_hdr_main", align = "l", clr = {255, 200, 200, 200} },
 			{ id = "enabled", type = "check", val = 1, def = true },
-			{ id = "tiers", type = "check", val = 1, def = true },
-
-			{ id = "hdr_look", type = "title", text = "ui_mcm_socart_hdr_look", align = "l", clr = {255, 200, 200, 200} },
-			{ id = "lights", type = "check", val = 1, def = true },
-			{ id = "particles", type = "check", val = 1, def = true },
 
 			{ id = "hdr_debug", type = "title", text = "ui_mcm_socart_hdr_debug", align = "l", clr = {255, 200, 200, 200} },
 			{ id = "debug", type = "check", val = 1, def = false },

@@ -1,0 +1,116 @@
+--[[
+	Artifact Visibility 1.1.0 by Expand
+	Idea: "SoC-style Artefacts (DLTX)" by MaxSpringer.
+
+	Artefacts lying in the world are always visible (no detector needed), like in Shadow of Chernobyl.
+
+	How it works
+	- Engine (xray-monolith and Quark, same code): an artefact with af_rank > 0 hides itself 5 s after the last
+	  SetVisible call (SArtefactDetectorsSupport::UpdateOnFrame); with af_rank 0 it is never hidden. A detector
+	  ignores artefacts whose af_rank is above its own (detector tiers).
+	- This script keeps af_rank as it is (detectors keep their tiers). The artefact binder
+	  (item_artefact.artefact_binder.update) calls SwitchVisibility(true) every REFRESH_MS on artefacts lying in
+	  the world. On a visible artefact that only resets the engine's 5 s timer (no effect, no sound).
+	  CArtefact::shedule_Update runs the script binder before the hide check in the same tick, so the artefact is
+	  never hidden. Artefacts from any mod are covered as long as they use item_artefact.bind.
+	- The script never changes the game config. Glow light, idle particles and "detectors find all artefacts"
+	  are installer options: static DLTX files (mod_system_zzzzzzzzzzzzzzzzzz_socart_*.ltx).
+	- Artefacts with af_rank 0 (installer option "Detectors find all artefacts") are never hidden by the engine,
+	  so the binder skips them.
+	- Cost: the binder update already runs for every online artefact (every 20-50 ms). The wrapper adds one
+	  time check per call, and every REFRESH_MS one parent check and one engine call per artefact.
+--]]
+
+local TAG = "[SoCArts]"
+
+local DEFAULTS = {
+	enabled = true,    -- off = artefacts get hidden by the engine again, as without this mod
+	debug   = false,
+}
+
+local REFRESH_MS = 2000   -- must stay well below the engine's 5000 ms hide delay
+
+local tostring, type = tostring, type
+local str_format = string.format
+local time_global = time_global
+
+local ENABLED = DEFAULTS.enabled
+local DEBUG   = DEFAULTS.debug
+
+local function log(fmt, ...)
+	printf("%s %s", TAG, str_format(fmt, ...))
+end
+
+local function mcm(key)
+	local v = ui_mcm and ui_mcm.get and ui_mcm.get("socart/" .. key)
+	if v == nil then return DEFAULTS[key] end
+	return v and true or false
+end
+
+local function read_settings()
+	ENABLED = mcm("enabled")
+	DEBUG   = mcm("debug")
+end
+
+-- Debug only: show which installer options are active, read from one artefact section (read-only).
+local function log_install_state()
+	local ini = system_ini()
+	local sec = "af_vaselisk"   -- has light and particles in GAMMA
+	if not (ini and ini:section_exist(sec)) then
+		log("debug: section [%s] not found, can't show installer options", sec)
+		return
+	end
+	local rank  = ini:line_exist(sec, "af_rank") and ini:r_string(sec, "af_rank") or "-"
+	local light = ini:line_exist(sec, "lights_enabled") and ini:r_string(sec, "lights_enabled") or "-"
+	local part  = ini:line_exist(sec, "particles") and ini:r_string(sec, "particles") or "(none)"
+	log("debug: [%s] af_rank=%s lights_enabled=%s particles=%s | enabled=%s",
+		sec, tostring(rank), tostring(light), tostring(part), tostring(ENABLED))
+end
+
+-- Installed once per Lua state from on_game_start: axr_main runs every script's top-level code before any
+-- on_game_start, so mods that replace this method at load time (e.g. Perk-Based Artefacts' zz_item_artefact)
+-- are already in place and get wrapped, and no artefact is online yet.
+local keeper_installed = false
+
+local function install_visibility_keeper()
+	if keeper_installed then return true end
+	local cls = item_artefact and item_artefact.artefact_binder
+	local base_update = cls and cls.update
+	if type(base_update) ~= "function" then
+		return false
+	end
+	cls.update = function(self, delta)
+		-- runs before the original update: if that raised an error the engine would drop the binder
+		if ENABLED then
+			local now = time_global()
+			if now >= (self.socart_next or 0) then
+				self.socart_next = now + REFRESH_MS
+				local obj = self.object
+				if obj and not obj:parent() then
+					local art = obj:cast_Artefact()
+					if art and art:GetAfRank() ~= 0 then
+						art:SwitchVisibility(true)
+					end
+				end
+			end
+		end
+		return base_update(self, delta)
+	end
+	keeper_installed = true
+	return true
+end
+
+local function on_option_change()
+	read_settings()
+end
+
+function on_game_start()
+	read_settings()
+	if not install_visibility_keeper() then
+		log("item_artefact.artefact_binder.update not found: artefacts can't be kept visible (only the installer option 'Detectors find all artefacts' works)")
+	end
+	if DEBUG then
+		log_install_state()
+	end
+	RegisterScriptCallback("on_option_change", on_option_change)
+end

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
+  <moduleName>Artifact Visibility 1.1.0</moduleName>
+  <requiredInstallFiles>
+    <folder source="00 Main\gamedata" destination="gamedata" priority="0" />
+    <file source="README_EN.txt" destination="README_EN.txt" priority="0" />
+    <file source="README_RU.txt" destination="README_RU.txt" priority="0" />
+  </requiredInstallFiles>
+  <installSteps order="Explicit">
+    <installStep name="Artifact Visibility">
+      <optionalFileGroups order="Explicit">
+        <group name="Detectors" type="SelectExactlyOne">
+          <plugins order="Explicit">
+            <plugin name="Keep detector tiers (recommended)">
+              <description>Artefacts stay visible to the eye, and each detector still only finds the artefacts of its tier, as in normal G.A.M.M.A. A small script keeps artefacts from any mod visible; it can be switched off live in MCM ("Enable mod"). Costs a tiny check per artefact every 2 seconds.
+
+Артефакты видны глазом, а каждый детектор по-прежнему находит только артефакты своего уровня, как в обычной G.A.M.M.A. Небольшой скрипт держит видимыми артефакты из любых модов; его можно выключить прямо в игре в MCM ("Включить мод"). Стоит крошечной проверки на артефакт раз в 2 секунды.</description>
+              <typeDescriptor>
+                <type name="Recommended" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="Detectors find all artefacts">
+              <description>Sets the artefact rank to 0 for all known artefacts (223 sections from G.A.M.M.A. and common addons): the game never hides them, and every detector, even the simplest, finds every artefact. No script work for these artefacts. Artefacts from mods not in the list are still kept visible by the script. MCM "Enable mod" can't hide the listed artefacts again.
+
+Ставит ранг 0 всем известным артефактам (223 секции из G.A.M.M.A. и популярных аддонов): игра никогда их не скрывает, и любой детектор, даже самый простой, находит любые артефакты. Скрипт для этих артефактов ничего не делает. Артефакты из модов, которых нет в списке, по-прежнему держит видимыми скрипт. Опция MCM "Включить мод" не может снова скрыть артефакты из списка.</description>
+              <files>
+                <folder source="03 Detectors Find All\gamedata" destination="gamedata" priority="1" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+        <group name="Look" type="SelectAny">
+          <plugins order="Explicit">
+            <plugin name="No glow light">
+              <description>Artefacts cast no coloured light around them. Saves GPU time near anomaly fields, where many artefacts are visible at once.
+
+Артефакты не отбрасывают цветной свет вокруг себя. Экономит ресурсы видеокарты возле аномальных полей, где видно много артефактов сразу.</description>
+              <files>
+                <folder source="01 No Glow Light\gamedata" destination="gamedata" priority="1" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+            <plugin name="No idle particles">
+              <description>Removes the particle effects around artefacts (glowing halo, sparks, smoke). Many artefacts still look like they glow without light because of these. Only the artefact model stays.
+
+Убирает эффекты частиц вокруг артефактов (светящийся ореол, искры, дым). Из-за них многие артефакты выглядят светящимися даже без света. Остаётся только модель артефакта.</description>
+              <files>
+                <folder source="02 No Particles\gamedata" destination="gamedata" priority="1" />
+              </files>
+              <typeDescriptor>
+                <type name="Optional" />
+              </typeDescriptor>
+            </plugin>
+          </plugins>
+        </group>
+      </optionalFileGroups>
+    </installStep>
+  </installSteps>
+</config>
