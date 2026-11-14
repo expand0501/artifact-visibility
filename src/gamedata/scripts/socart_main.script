@@ -1,0 +1,270 @@
+--[[
+	Artifact Visibility 1.0.2 by Expand
+	Idea: "SoC-style Artefacts (DLTX)" by MaxSpringer.
+
+	Artefacts lying in the world are always visible (no detector needed), like in Shadow of Chernobyl.
+	Their glow light and idle particles can be switched off in MCM.
+
+	How it works
+	- The engine reads af_rank, lights_enabled and particles of an artefact section every time an artefact
+	  object comes online (CArtefact::Load). af_rank = 0 means the engine never hides the artefact.
+	- This script changes those three values in the loaded system config, once per game load, in on_game_start.
+	  on_game_start runs on the main thread while the game loads, before A-Life and level objects are loaded,
+	  so every artefact that appears afterwards uses the new values. Nothing runs during gameplay, except the
+	  small binder refresh of the optional detector tier mode (below).
+	- All artefact sections are found by scanning the config (any section with af_rank and can_be_controlled),
+	  so artefacts from every mod are covered and no DLTX load order can undo the change.
+	- The Lua state is recreated on every load, the system config is not. The original values are kept in the
+	  [socart_backup] section (mod_system_socart.ltx) for the rest of the session, so MCM changes can restore
+	  them exactly on the next load.
+	- Only existing lines of existing sections are changed, or lines added to our own section: no section is
+	  ever created or removed in the system config.
+	- Cost: the engine reads these lines in CArtefact::Load anyway (with or without this mod, ~20 lines per
+	  artefact when it comes online, never per frame). The mod adds no reads there; its own work is one config
+	  scan on the first load of a session.
+
+	Detector tiers (MCM "tiers", on by default)
+	- af_rank does two things in the engine: rank > 0 hides an artefact 5 s after its last SetVisible call, and a
+	  detector ignores artefacts whose rank is above its own. Rank 0 (tiers off) = visible and found by every
+	  detector.
+	- With "tiers" on, af_rank keeps its original value (detectors keep their tiers) and the artefact binder
+	  (item_artefact.artefact_binder.update) calls SwitchVisibility(true) every REFRESH_MS on artefacts lying in the
+	  world. On a visible artefact that only resets the engine's 5 s timer (no effect, no sound). CArtefact's
+	  shedule_Update runs the script binder before the hide check in the same tick, so the artefact is never hidden.
+	  Artefact sections with another script_binding can't be refreshed and get rank 0 instead.
+--]]
+
+local TAG     = "[SoCArts]"
+local BACKUP  = "socart_backup"
+local READY   = "_ready"         -- "true" once the backup holds the original values of this session
+
+local DEFAULTS = {
+	enabled   = true,   -- master switch: off = every artefact behaves as without this mod
+	tiers     = true,   -- detectors only find artefacts of their tier (artefacts stay visible)
+	lights    = true,   -- dynamic glow light around artefacts on the ground
+	particles = true,   -- idle particles (glow sprites, sparks, smoke) around artefacts on the ground
+	debug     = false,
+}
+
+local NONE = "-"   -- backup placeholder: line missing / light off / no particles
+local BINDER = "item_artefact.bind"   -- script_binding of artefacts the tier mode can keep visible
+local REFRESH_MS = 2000               -- must stay well below the engine's 5000 ms hide delay
+
+local pcall, tostring, type, pairs = pcall, tostring, type, pairs
+local str_match, str_format = string.match, string.format
+local time_global = time_global
+
+local DEBUG = DEFAULTS.debug
+
+local function log(fmt, ...)
+	printf("%s %s", TAG, str_format(fmt, ...))
+end
+
+local function dbg(fmt, ...)
+	if DEBUG then
+		printf("%s %s", TAG, str_format(fmt, ...))
+	end
+end
+
+local function mcm(key)
+	local v = ui_mcm and ui_mcm.get and ui_mcm.get("socart/" .. key)
+	if v == nil then return DEFAULTS[key] end
+	return v and true or false
+end
+
+-- The write API of system_ini (set_readonly, set_override_names, w_string, ...) exists in the modded exes and
+-- in Quark. Without it w_string would hit an engine assert, so check every method before touching anything.
+local function has_write_api(ini)
+	local ok, res = pcall(function()
+		return type(ini.set_readonly) ~= "nil" and type(ini.set_override_names) ~= "nil"
+			and type(ini.w_string) ~= "nil" and type(ini.section_for_each) ~= "nil"
+			and type(ini.r_line) ~= "nil" and type(ini.line_count) ~= "nil"
+	end)
+	return ok and res == true
+end
+
+local function read(ini, sec, key)
+	if ini:line_exist(sec, key) then
+		return ini:r_string(sec, key)   -- nil when the value is empty
+	end
+	return nil
+end
+
+-- Original values -> { [section] = { rank = "2", light = "true" | NONE, part = "name" | NONE } }
+
+local function parse_backup(ini)
+	local orig, n = {}, 0
+	local count = ini:line_count(BACKUP)
+	for i = 0, count - 1 do
+		local ok, key, val = ini:r_line(BACKUP, i, "", "")
+		if ok and key and key ~= READY and val then
+			local rank, light, part = str_match(val, "^([^|]*)|([^|]*)|(.*)$")
+			if rank and rank ~= "" then
+				orig[key] = { rank = rank, light = light, part = part }
+				n = n + 1
+			end
+		end
+	end
+	return orig, n
+end
+
+local function scan_config(ini)
+	local orig, n = {}, 0
+	ini:section_for_each(function(sec)
+		if sec ~= BACKUP and ini:line_exist(sec, "af_rank") and ini:line_exist(sec, "can_be_controlled") then
+			local rank = read(ini, sec, "af_rank")
+			if rank then
+				-- the engine only touches trail_light_* when lights_enabled is true, so only those
+				-- sections may ever get "true" back
+				local light = NONE
+				if ini:line_exist(sec, "lights_enabled") and ini:r_bool(sec, "lights_enabled") then
+					light = read(ini, sec, "lights_enabled") or NONE
+				end
+				local part = read(ini, sec, "particles") or NONE
+				orig[sec] = { rank = rank, light = light, part = part }
+				n = n + 1
+			end
+		end
+		return false
+	end)
+	return orig, n
+end
+
+-- Runs between set_readonly(false) and set_readonly(true); any Lua error is caught by the caller.
+local function write_all(ini, orig, from_backup, want_visible, want_tiers, want_lights, want_particles)
+	if not from_backup then
+		for sec, o in pairs(orig) do
+			ini:w_string(BACKUP, sec, o.rank .. "|" .. o.light .. "|" .. o.part, "")
+		end
+		ini:w_string(BACKUP, READY, "true", "")
+	end
+
+	local changed = 0
+	for sec, o in pairs(orig) do
+		local rank = o.rank
+		if want_visible and not (want_tiers and read(ini, sec, "script_binding") == BINDER) then
+			rank = "0"
+		end
+		if read(ini, sec, "af_rank") ~= rank then
+			ini:w_string(sec, "af_rank", rank, "")
+			changed = changed + 1
+		end
+
+		if o.light ~= NONE and ini:line_exist(sec, "lights_enabled") then
+			local light = want_lights and o.light or "false"
+			if read(ini, sec, "lights_enabled") ~= light then
+				ini:w_string(sec, "lights_enabled", light, "")
+				changed = changed + 1
+			end
+		end
+
+		if o.part ~= NONE and ini:line_exist(sec, "particles") then
+			-- an empty value makes the engine load no particles (m_sParticlesName stays empty)
+			local cur = read(ini, sec, "particles")
+			if want_particles then
+				if cur ~= o.part then
+					ini:w_string(sec, "particles", o.part, "")
+					changed = changed + 1
+				end
+			elseif cur ~= nil then
+				ini:w_string(sec, "particles", "", "")
+				changed = changed + 1
+			end
+		end
+	end
+	return changed
+end
+
+-- Tier mode: keep artefacts lying in the world visible while af_rank keeps its original value.
+-- Installed once per Lua state from on_game_start: axr_main runs every script's top-level code before any
+-- on_game_start, so mods that replace this method at load time (e.g. Perk-Based Artefacts' zz_item_artefact)
+-- are already in place and get wrapped, and no artefact is online yet.
+local keeper_installed = false
+
+local function install_visibility_keeper()
+	if keeper_installed then return true end
+	local cls = item_artefact and item_artefact.artefact_binder
+	local base_update = cls and cls.update
+	if type(base_update) ~= "function" then
+		return false
+	end
+	cls.update = function(self, delta)
+		-- before the original update: if it raised an error the engine would drop the binder
+		local now = time_global()
+		if now >= (self.socart_next or 0) then
+			self.socart_next = now + REFRESH_MS
+			local obj = self.object
+			if obj and not obj:parent() then
+				local art = obj:cast_Artefact()
+				if art then
+					art:SwitchVisibility(true)
+				end
+			end
+		end
+		return base_update(self, delta)
+	end
+	keeper_installed = true
+	return true
+end
+
+local function apply()
+	DEBUG = mcm("debug")
+
+	local ini = system_ini()
+	if not ini then
+		log("system_ini() is nil, nothing done")
+		return
+	end
+	if not ini:section_exist(BACKUP) then
+		log("section [%s] missing (mod_system_socart.ltx not loaded: is DLTX installed?), nothing done", BACKUP)
+		return
+	end
+	if not has_write_api(ini) then
+		log("this engine can't edit the system config from scripts, nothing done")
+		return
+	end
+
+	local enabled        = mcm("enabled")
+	local want_visible   = enabled   -- artefacts are always visible while the mod is enabled
+	local want_lights    = (not enabled) or mcm("lights")
+	local want_particles = (not enabled) or mcm("particles")
+	local want_tiers     = want_visible and mcm("tiers")
+	if want_tiers and not install_visibility_keeper() then
+		log("item_artefact.artefact_binder.update not found: detector tiers off, all artefacts get rank 0")
+		want_tiers = false
+	end
+
+	local from_backup = read(ini, BACKUP, READY) == "true"
+	local ok_read, orig, n = pcall(from_backup and parse_backup or scan_config, ini)
+	if not ok_read then
+		log("error while reading artefact sections: %s", tostring(orig))
+		return
+	end
+	if not n or n == 0 then
+		log("no artefact sections found, nothing done")
+		return
+	end
+
+	ini:set_readonly(false)
+	ini:set_override_names(true)
+	local ok, res = pcall(write_all, ini, orig, from_backup, want_visible, want_tiers, want_lights, want_particles)
+	ini:set_override_names(false)
+	ini:set_readonly(true)
+
+	if not ok then
+		log("error while applying settings: %s", tostring(res))
+		return
+	end
+	dbg("%s artefact sections (%s), %s values changed | visible=%s tiers=%s lights=%s particles=%s",
+		n, from_backup and "from backup" or "scanned", res, tostring(want_visible), tostring(want_tiers),
+		tostring(want_lights), tostring(want_particles))
+end
+
+local function on_option_change()
+	DEBUG = mcm("debug")
+end
+
+function on_game_start()
+	apply()
+	RegisterScriptCallback("on_option_change", on_option_change)
+end

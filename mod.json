@@ -1,0 +1,13 @@
+{
+  "name": "Artifact Visibility",
+  "version": "1.0.2",
+  "zip": "Artifact_Visibility_by_Expand_{version}",
+  "zipLegacy": ["SoC_Style_Artefacts_Remake_by_Expand_{version}"],
+  "versionFiles": [
+    "src/README_EN.txt",
+    "src/README_RU.txt",
+    "src/gamedata/scripts/socart_main.script",
+    "src/gamedata/configs/text/eng/ui_st_socart_mcm.xml",
+    "src/gamedata/configs/text/rus/ui_st_socart_mcm.xml"
+  ]
+}

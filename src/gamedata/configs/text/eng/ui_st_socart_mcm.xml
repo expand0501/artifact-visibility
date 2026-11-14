@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!-- Artifact Visibility 1.0.2 by Expand -->
+<string_table>
+	<string id="ui_mcm_menu_socart">
+		<text>Artifact Visibility</text>
+	</string>
+	<string id="ui_mcm_socart_title">
+		<text>Artifact Visibility</text>
+	</string>
+	<string id="ui_mcm_socart_credits">
+		<text>Artifact Visibility by Expand. Idea: SoC-style Artefacts (DLTX) by MaxSpringer.</text>
+	</string>
+	<string id="ui_mcm_socart_apply_note">
+		<text>All settings take effect after you load a save (or start a new game).</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_main">
+		<text>Main</text>
+	</string>
+	<string id="ui_mcm_socart_enabled">
+		<text>Enable mod</text>
+	</string>
+	<string id="ui_mcm_socart_enabled_desc">
+		<text>Off = all artefacts look and behave as without this mod (hidden until a detector finds them, original light and particles). Takes effect after loading a save.</text>
+	</string>
+	<string id="ui_mcm_socart_tiers">
+		<text>Detectors keep their tiers</text>
+	</string>
+	<string id="ui_mcm_socart_tiers_desc">
+		<text>Artefacts stay visible to the eye, but a detector only beeps for and shows the artefacts of its tier, as in normal GAMMA (simple detectors miss rare artefacts). Off = every detector finds every artefact. Costs a tiny check per artefact every 2 seconds. Takes effect after loading a save.</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_look">
+		<text>Look</text>
+	</string>
+	<string id="ui_mcm_socart_lights">
+		<text>Artefact glow light</text>
+	</string>
+	<string id="ui_mcm_socart_lights_desc">
+		<text>Coloured light that artefacts lying in the world cast around them. Off = no light (slightly cheaper for the GPU near anomaly fields). Takes effect after loading a save.</text>
+	</string>
+	<string id="ui_mcm_socart_particles">
+		<text>Artefact particles</text>
+	</string>
+	<string id="ui_mcm_socart_particles_desc">
+		<text>Particle effects around artefacts lying in the world (glowing halo, sparks, smoke). Many artefacts still look like they glow with the light switched off because of these. Off = only the artefact model. Takes effect after loading a save.</text>
+	</string>
+	<string id="ui_mcm_socart_hdr_debug">
+		<text>Debug</text>
+	</string>
+	<string id="ui_mcm_socart_debug">
+		<text>Debug log</text>
+	</string>
+	<string id="ui_mcm_socart_debug_desc">
+		<text>Writes one line with the number of changed artefact values to the game log (xray_*.log, tag [SoCArts]) on every load. Only for bug reports.</text>
+	</string>
+</string_table>
