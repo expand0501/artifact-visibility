@@ -7,3 +7,6 @@ meta.ini
 # Built zips are attached to GitHub Releases, not committed
 *.zip
 *.7z
+
+# Python cache of tools/
+__pycache__/

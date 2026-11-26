@@ -1,4 +1,4 @@
-Artifact Visibility 1.1.0 by Expand
+Artifact Visibility 1.1.1 by Expand
 ===================================
 
 Artefacts lying in the world are always visible, like in Shadow of Chernobyl: no detector needed to see them.
@@ -28,7 +28,7 @@ Install
 - Remove/disable the old "SoC-style Artefacts (DLTX)" mod and all of its variants and patches
   (Main, No Lights, No Particles, Junkies, BAM).
 - Can be installed or removed mid-playthrough. Installer options take effect after loading a save.
-- The option files list 223 artefact sections. If an artefact mod in the list isn't installed, the game log
+- The option files list 268 artefact sections. If an artefact mod in the list isn't installed, the game log
   shows a harmless "[DLTX] WARNING: Attemped to override section ..." line for each of its sections.
 
 Settings (MCM -> Artifact Visibility)
@@ -41,6 +41,9 @@ Turn on "Debug log" in MCM, load a save, and send the [SoCArts] lines from <Anom
 together with the installer options you picked.
 
 Version history
+- 1.1.1: a dropped artefact no longer blinks (hidden, then shown again with the detector effect and sound).
+  The installer options now cover 268 artefact sections (was 223): junk artefacts from Perk-Based Artefacts,
+  Shadow of Chernobyl artefacts, DOGMA glowsticks and others kept their glow and particles. Reinstall to apply.
 - 1.1.0: glow light, particles and detector tiers are now installer options (DLTX files); the mod no
   longer edits the game config while it runs. MCM keeps "Enable mod" (now applies immediately) and the debug log.
 - 1.0.2: removed the "Artefacts always visible" MCM option: artefacts are always visible while the mod is enabled.

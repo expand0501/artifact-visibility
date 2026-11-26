@@ -1,9 +1,10 @@
 """
 Artifact Visibility - artefact section list generator (not shipped).
 
-Builds the MO2 virtual configs folder of one or more profiles (loose files only: vanilla .db archives are not read;
-GAMMA replaces vanilla items_artefacts.ltx with Perk-Based Artefacts' copy), parses every .ltx below
-gamedata/configs with DLTX rules (base [sec]:parents, overrides ![sec] / @[sec], key delete !key), resolves
+Builds the MO2 virtual configs folder of one or more profiles on top of the unpacked vanilla configs (--vanilla,
+default reference/anomaly-1.5.3/configs: stands in for the .db archives, which hold e.g. items_artefacts_soc.ltx and
+mp/weapons_mp/items_mp.ltx), parses the files the engine merges into system_ini (system.ltx and its #include tree,
+then mod_system_*.ltx; since 1.1.1: other .ltx files are separate ini files and replaced real sections) with DLTX rules (base [sec]:parents, overrides ![sec] / @[sec], key delete !key), resolves
 inheritance and lists every section that ends up with af_rank and can_be_controlled = true - the rule the engine uses to give an
 artefact detector support (CArtefact::net_Spawn).
 
@@ -14,6 +15,7 @@ Usage (read-only on the GAMMA folder):
 Output: JSON {section: {"profiles": [...], "binding": str|None, "lights": bool, "particles": bool, "rank": str}}
 """
 import argparse
+import fnmatch
 import json
 import os
 import re
@@ -32,9 +34,52 @@ def read_modlist(gamma, profile):
     return mods
 
 
-def virtual_configs(gamma, mods):
-    """relative path (lower case) -> (real path, mod) of the winning file"""
+def vanilla_configs(vanilla):
+    """lowest layer: the unpacked vanilla configs (stand in for Anomaly's .db archives, which are not read)"""
     tree = {}
+    if not vanilla or not os.path.isdir(vanilla):
+        return tree
+    for dp, _, files in os.walk(vanilla):
+        for fn in files:
+            if fn.lower().endswith(".ltx"):
+                full = os.path.join(dp, fn)
+                tree[os.path.relpath(full, vanilla).replace("\\", "/").lower()] = (full, "<vanilla>")
+    return tree
+
+
+INCLUDE = re.compile(r'^\s*#include\s+"([^"]+)"', re.I)
+
+
+def reachable(tree):
+    """files the engine loads into system_ini: system.ltx and its #include tree (wildcards too), then the DLTX
+    mod_system_*.ltx files. Other .ltx files are separate ini files (e.g. grok_items_tier.ltx of the treasure
+    manager) and must not be merged: their sections would replace the real ones."""
+    order, seen = [], set()
+
+    def visit(rel):
+        if rel in seen or rel not in tree:
+            return
+        seen.add(rel)
+        order.append(rel)
+        d = os.path.dirname(rel)
+        with open(tree[rel][0], "rb") as f:
+            text = f.read().decode("cp1251", errors="replace")
+        for line in text.splitlines():
+            m = INCLUDE.match(line)
+            if not m:
+                continue
+            pat = os.path.normpath(os.path.join(d, m.group(1).replace("\\", "/"))).replace("\\", "/").lower()
+            for r in sorted(r for r in tree if fnmatch.fnmatch(r, pat)):
+                visit(r)
+
+    visit("system.ltx")
+    order += sorted(r for r in tree if "/" not in r and r.startswith("mod_system_"))
+    return {r: tree[r] for r in order}
+
+
+def virtual_configs(gamma, mods, vanilla=None):
+    """relative path (lower case) -> (real path, mod) of the winning file"""
+    tree = vanilla_configs(vanilla)
     for mod in mods:
         root = os.path.join(gamma, "mods", mod, "gamedata", "configs")
         if not os.path.isdir(root):
@@ -164,11 +209,16 @@ def main():
     ap.add_argument("--profile", action="append", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--write-src")
+    ap.add_argument("--vanilla", default=os.path.normpath(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                    "..", "..", "..", "reference", "anomaly-1.5.3", "configs")),
+                    help="unpacked vanilla Anomaly configs (default: the workspace's reference\\anomaly-1.5.3\\configs)")
     a = ap.parse_args()
+    if not os.path.isfile(os.path.join(a.vanilla, "system.ltx")):
+        sys.exit(f"no system.ltx in the vanilla configs folder {a.vanilla}")
 
     result = {}
     for prof in a.profile:
-        base = build(virtual_configs(a.gamma, read_modlist(a.gamma, prof)))
+        base = build(reachable(virtual_configs(a.gamma, read_modlist(a.gamma, prof), a.vanilla)))
         n = 0
         for name in base:
             r = resolve(base, name)

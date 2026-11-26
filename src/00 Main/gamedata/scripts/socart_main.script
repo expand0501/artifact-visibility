@@ -1,5 +1,5 @@
 --[[
-	Artifact Visibility 1.1.0 by Expand
+	Artifact Visibility 1.1.1 by Expand
 	Idea: "SoC-style Artefacts (DLTX)" by MaxSpringer.
 
 	Artefacts lying in the world are always visible (no detector needed), like in Shadow of Chernobyl.
@@ -18,7 +18,8 @@
 	- Artefacts with af_rank 0 (installer option "Detectors find all artefacts") are never hidden by the engine,
 	  so the binder skips them.
 	- Cost: the binder update already runs for every online artefact (every 20-50 ms). The wrapper adds one
-	  time check per call, and every REFRESH_MS one parent check and one engine call per artefact.
+	  time check per call, and every REFRESH_MS one parent check and one engine call per artefact on the ground.
+	  An artefact carried in an inventory costs one parent check per call (its refresh stays due until it is dropped).
 --]]
 
 local TAG = "[SoCArts]"
@@ -84,9 +85,11 @@ local function install_visibility_keeper()
 		if ENABLED then
 			local now = time_global()
 			if now >= (self.socart_next or 0) then
-				self.socart_next = now + REFRESH_MS
 				local obj = self.object
+				-- the timer only runs on the ground: while carried the refresh stays due, so the first update after a
+				-- drop refreshes before the engine's hide check in the same tick (else: hidden, then shown with effect)
 				if obj and not obj:parent() then
+					self.socart_next = now + REFRESH_MS
 					local art = obj:cast_Artefact()
 					if art and art:GetAfRank() ~= 0 then
 						art:SwitchVisibility(true)

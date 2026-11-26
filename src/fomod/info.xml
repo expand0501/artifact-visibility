@@ -2,6 +2,6 @@
 <fomod>
   <Name>Artifact Visibility</Name>
   <Author>Expand (idea: MaxSpringer)</Author>
-  <Version>1.1.0</Version>
+  <Version>1.1.1</Version>
   <Description>Artefacts lying in the world are always visible without a detector, like in Shadow of Chernobyl. Glow light, idle particles and detector tiers are chosen in this installer.</Description>
 </fomod>

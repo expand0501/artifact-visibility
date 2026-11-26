@@ -1,5 +1,16 @@
 # Changelog - Artifact Visibility by Expand
 
+- 1.1.1: two bugs found by the in-game test suite (`run.ps1 -Suite av`, 2026-11-26, profile `Claude Test`).
+  Dropped artefacts no longer blink: the binder's 2 s refresh timer now runs only for artefacts on the ground, so the
+  first update after a drop refreshes before the engine's hide check (before: hidden 10-40 ms after every drop, shown
+  again up to 2 s later with the detector show effect and sound). Installer files regenerated: 268 sections (was
+  223). `tools/gen_sections.py` now merges only what the engine merges into system_ini (`system.ltx` include tree +
+  `mod_system_*.ltx`; base GAMMA's treasure-tier file `grok_items_tier.ltx` had replaced 28 Perk-Based junk
+  artefacts) and reads the unpacked vanilla configs for sections that only exist in the `.db` archives (SoC
+  artefacts, `monolith_shard`, multiplayer artefacts, DOGMA glowsticks inheriting `af_signet`). Before, 46 sections
+  (42 in base GAMMA) kept their glow light / idle particles / detector tier. Reinstall over 1.1.0 with the same options.
+  Tested: suite run `20261126-224954` on the 1.1.1 zip (profile `Claude Test`): 7 of 7 scenarios PASS, 0 Lua errors.
+
 - 1.1.0: no more runtime edits of the game config (`system_ini()` writes removed, along with the `[socart_backup]`
   section file). Glow light, idle particles and "detectors find all artefacts" (`af_rank = 0`) are now FOMOD
   installer options: static DLTX files `mod_system_zzzzzzzzzzzzzzzzzz_socart_*.ltx` (named to load after GAMMA's

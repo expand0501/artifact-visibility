@@ -46,8 +46,8 @@ Any future idea that needs engine-state writes must be asked first (workspace CL
   so on a visible artefact it only resets the 5 s hide timer. `CArtefact::shedule_Update` -> ... ->
   `CGameObject::shedule_Update` calls the script binder before `UpdateOnFrame` (hide check) in the same tick.
   Never call it in binder `net_spawn`: `CPhysicItem::net_Spawn` sets visible only after the binder's net_spawn, so
-  the artefact is still invisible there (show particles + sound, second StartLights). All 223 sections found use
-  `item_artefact.bind` (2026-11-14), so no rank-0 fallback is needed for tier mode.
+  the artefact is still invisible there (show particles + sound, second StartLights). All sections found use
+  `item_artefact.bind` (2026-11-14, again 268 of 268 on 2026-11-26), so no rank-0 fallback is needed for tier mode.
 - DLTX (xray-monolith `src/xrCore/Xr_ini.cpp`): overrides must use `![sec]` (merges keys, override wins per key;
   missing section = warning only). A plain duplicate `[sec]` is a fatal "Duplicate section" crash. Mod files of one
   root file load alphabetically, later override wins: our `zzzzzzzzzzzzzzzzzz` (18 z) sorts after GAMMA's
@@ -56,7 +56,7 @@ Any future idea that needs engine-state writes must be asked first (workspace CL
   empty, `SwitchAfParticles` does nothing). Not `!particles`: a deleted key may fall back to a parent's value.
   No script in GAMMA reads `particles` of artefacts (checked 2026-11-14).
 - Section list = every section with `af_rank` and `can_be_controlled = true` after DLTX merge and inheritance, from
-  profiles `G.A.M.M.A` (211) and `v31.1 - radiation rework` (223; the 12 extra: mag pouches, side saddles,
+  profiles `G.A.M.M.A` (252 since 1.1.1) and `Claude Test` / `v31.1 - radiation rework` (268; extra: mag pouches, side saddles,
   `af_grid_prototype`, monolith/prometheus container variants). Every section redefines `af_rank` itself, so a parent
   override would not cover children. Includes non-artefact `af_base` items (hides, `marker`, attachments), same
   as the 1.0.x runtime scan.
@@ -74,9 +74,35 @@ Any future idea that needs engine-state writes must be asked first (workspace CL
 - `v31.1 - radiation rework`: old `SoCStyleArtefacts_NoLights` enabled; must be disabled for this mod.
 - `G.A.M.M.A` (base 0.9.5): old mod disabled; nothing to change.
 
+## Tests
+In-game suite `run.ps1 -Suite av` (7 scenarios, one launch; plan, proofs and what stays manual in `tests.md`).
+First runs 2026-11-26 on 1.1.0 (profile `Claude Test`, save `claude_test`; run by the coordinating session):
+- `20261126-164440` (`basics`): 21 PASS checks, 4 FAIL = installer files missed 46 sections (fixed in 1.1.1, below).
+- `20261126-164620` (all): `visible_on`, `disabled`, `live_toggle` PASS. `drop` FAIL = mod bug (fixed in 1.1.1, below).
+  `no_mcm` and `saveload` FAIL = runner bugs (fixed in the runner, rerun pending).
+Run `20261126-224954` on 1.1.1 (installed zip, options No Glow Light + No Particles, profile `Claude Test`, save
+`claude_test`): all 7 scenarios PASS (86 checks), 0 FAIL / UNCLEAR, 0 Lua errors, 0 FATAL. `drop`: 0 of 4 dropped
+artefacts hidden (1.1.0: 4 of 4); `basics`: `*_all` and `*_file_covers` PASS (no section missed). Not run in profile
+`G.A.M.M.A` (no save there yet).
+
+## Fixed in 1.1.1 (found by the suite, verified in game on 1.1.0)
+- Dropped artefacts blinked: 4 of 4 hidden 10-40 ms after the drop, shown again 190-1550 ms later with the show
+  particles + sound (af_medusa `6832:V 6861:H 8468:V`). Cause: the wrapper set `socart_next` also while the artefact
+  was in an inventory (where it skips `SwitchVisibility`), so after the drop (`CArtefact::OnH_B_Independent` shows it,
+  hide timer old) the refresh wasn't due and `UpdateOnFrame` hid it in the next tick. Fix: `socart_next` is set only
+  for artefacts without a parent, so the refresh stays due while carried and runs in the first tick after the drop,
+  before the hide check. Cost: one `obj:parent()` per binder update of a carried artefact.
+- Installer files missed 46 sections in `Claude Test` (29 kept light, 7 particles; 42 in `G.A.M.M.A`, **inference**):
+  `gen_sections.py` merged every `.ltx` (`grok_items_tier.ltx` of `G.A.M.M.A. Expert toolkits tier 5`, a separate
+  treasure_manager ini, replaced 28 Perk-Based junk artefacts with parent-less sections) and read no vanilla `.db`
+  (14 vanilla-only sections + 4 DOGMA glowsticks inheriting `af_signet`). Now: only `system.ltx`'s include tree +
+  `mod_system_*.ltx`, with `reference\anomaly-1.5.3\configs` as the vanilla layer (`--vanilla`). Its counts equal the
+  game's `system_ini` exactly for `Claude Test` (268 sections, ranks 221/23/21/3, 29 lit, 7 particles; **verified**
+  against run `20261126-164440`). Files regenerated from `G.A.M.M.A` (252), `Claude Test` (268), `v31.1 - radiation
+  rework` (268): 268 sections; `hide_bloodsucjer` dropped (not in system_ini).
+
 ## Open items
-- 1.1.0 not tested in game: installer options (light/particles gone, rank 0 makes simple detectors find everything),
-  MCM "Enable mod" off/on live, debug line in the log.
-- Tier mode: check that low detectors ignore high-tier artefacts and no show effect/sound plays when artefacts come
-  online or are dropped.
+- 1.1.1 passed the automatic suite (see Tests); not checked by eye yet: light / particles gone on the 46 newly listed artefacts (e.g. af_atom,
+  af_sun, af_ameba_mica), no blink when dropping an artefact.
+- Tier mode: check that low detectors ignore high-tier artefacts (by hand).
 - GAMMA `dev2` (0.9.6) artefact sections not checked against the list.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://qconsulting.ca/fo3/ModConfig5.0.xsd">
-  <moduleName>Artifact Visibility 1.1.0</moduleName>
+  <moduleName>Artifact Visibility 1.1.1</moduleName>
   <requiredInstallFiles>
     <folder source="00 Main\gamedata" destination="gamedata" priority="0" />
     <file source="README_EN.txt" destination="README_EN.txt" priority="0" />
@@ -20,9 +20,9 @@
               </typeDescriptor>
             </plugin>
             <plugin name="Detectors find all artefacts">
-              <description>Sets the artefact rank to 0 for all known artefacts (223 sections from G.A.M.M.A. and common addons): the game never hides them, and every detector, even the simplest, finds every artefact. No script work for these artefacts. Artefacts from mods not in the list are still kept visible by the script. MCM "Enable mod" can't hide the listed artefacts again.
+              <description>Sets the artefact rank to 0 for all known artefacts (268 sections from G.A.M.M.A. and common addons): the game never hides them, and every detector, even the simplest, finds every artefact. No script work for these artefacts. Artefacts from mods not in the list are still kept visible by the script. MCM "Enable mod" can't hide the listed artefacts again.
 
-Ставит ранг 0 всем известным артефактам (223 секции из G.A.M.M.A. и популярных аддонов): игра никогда их не скрывает, и любой детектор, даже самый простой, находит любые артефакты. Скрипт для этих артефактов ничего не делает. Артефакты из модов, которых нет в списке, по-прежнему держит видимыми скрипт. Опция MCM "Включить мод" не может снова скрыть артефакты из списка.</description>
+Ставит ранг 0 всем известным артефактам (268 секций из G.A.M.M.A. и популярных аддонов): игра никогда их не скрывает, и любой детектор, даже самый простой, находит любые артефакты. Скрипт для этих артефактов ничего не делает. Артефакты из модов, которых нет в списке, по-прежнему держит видимыми скрипт. Опция MCM "Включить мод" не может снова скрыть артефакты из списка.</description>
               <files>
                 <folder source="03 Detectors Find All\gamedata" destination="gamedata" priority="1" />
               </files>
